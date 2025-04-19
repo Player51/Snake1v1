@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake 1v1</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #fef8f2;
+      font-family: 'Times New Roman','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #1a1a1a;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    h1 {
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 48px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #000;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #ff007f;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      width: 100%;
+      max-width: 1000px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .box {
+      background-color: #fff;
+      border: 2px solid #1a1a1a;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 4px 4px 0 #000;
+      transition: transform 0.2s ease;
+    }
+
+    .box:hover {
+      transform: scale(1.02);
+    }
+
+    .box h2 {
+      color: #000;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .box p {
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    .highlight {
+      color: #ff007f;
+      font-weight: bold;
+    }
+
+    .download-button {
+      background-color: #ff007f;
+      color: #fff;
+      border: none;
+      font-size: 20px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 40px;
+      transition: background-color 0.2s ease;
+    }
+
+    .download-button:hover {
+      background-color: #e6006f;
+    }
+
+    footer {
+      margin-top: 60px;
+      font-size: 18px;
+      color: #ff007f;
+      text-align: center;
+    }
+
+    /* Snake */
+    .snake-segment {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #1a1a1a;
+      z-index: 0;
+    }
+
+    .snake-head {
+      background-color: #ff007f;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Snake 1v1</h1>
+  <div class="subtitle">Two snakes. One board. No mercy.</div>
+
+  <div class="grid" id="game-area">
+    <div class="box">
+      <h2>What is Snake 1v1?</h2>
+      <p>
+        It’s classic Snake — but with a twist. In <span class="highlight">Snake 1v1</span>, you’re not alone. You’ll go head-to-head against an AI snake in the same arena. 
+        Outsmart it. Out-slither it. Or get eaten trying.
+      </p>
+    </div>
+
+    <div class="box">
+      <h2>How It Works</h2>
+      <p>
+        You control your snake. The AI controls the other. Eat apples, grow longer, and stay alive. 
+        But here’s the kicker — <span class="highlight">you can kill each other</span>. One wrong turn and it’s game over.
+      </p>
+    </div>
+
+    <div class="box">
+      <h2>Who Usually Wins?</h2>
+      <p>
+        Let’s just say the AI has won a few... but we’re pretty sure it’s cheating. 😤 <br>
+        Prove you're smarter than the machine.
+      </p>
+    </div>
+  </div>
+
+  <a class="download-button" href="content/game.zip">Download Game Files</a>
+  
+  <img src="content/snake.gif" alt="Snake battle gif" style="margin-top: 30px; max-width: 100%; border-radius: 12px; box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);" />
+  
+  <footer>
+    Last Winner: AI 🙁 We're sure it was a mistake... (1 - 0)
+  </footer>
+
+  <script>
+    const snakeLength = 8;
+    const segmentSize = 20;
+    const snake = [];
+    const gameArea = document.body;
+
+    // Create segments
+    for (let i = 0; i < snakeLength; i++) {
+      const segment = document.createElement('div');
+      segment.className = 'snake-segment' + (i === 0 ? ' snake-head' : '');
+      gameArea.appendChild(segment);
+      snake.push(segment);
+    }
+
+    // Define a path that wraps around the boxes
+    const path = [];
+    const offsetX = (window.innerWidth - 2880) / 2 - 40;
+    const offsetY = 140;
+    const boxWidth = 1000 + 40;  // boxes + gap
+    const boxHeight = 350;
+
+    // Top
+    for (let x = offsetX; x <= offsetX + boxWidth; x += segmentSize)
+      path.push([x, offsetY]);
+    // Right
+    for (let y = offsetY; y <= offsetY + boxHeight; y += segmentSize)
+      path.push([offsetX + boxWidth, y]);
+    // Bottom
+    for (let x = offsetX + boxWidth; x >= offsetX; x -= segmentSize)
+      path.push([x, offsetY + boxHeight]);
+    // Left
+    for (let y = offsetY + boxHeight; y >= offsetY; y -= segmentSize)
+      path.push([offsetX, y]);
+
+    let index = 0;
+    const speed = 75; // ms per move (slower = higher number)
+
+    function animateSnake() {
+      index = (index + 1) % path.length;
+      for (let i = 0; i < snake.length; i++) {
+        const pathIndex = (index - i + path.length) % path.length;
+        const [x, y] = path[pathIndex];
+        snake[i].style.transform = `translate(${x}px, ${y}px)`;
+      }
+      setTimeout(animateSnake, speed);
+    }
+
+    animateSnake();
+  </script>
+
+</body>
+</html>
